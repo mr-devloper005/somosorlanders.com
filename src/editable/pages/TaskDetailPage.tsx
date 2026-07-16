@@ -8,8 +8,11 @@ import type { SitePost } from '@/lib/site-connector'
 import { EditableSiteShell } from '@/editable/shell/EditableSiteShell'
 import { EditableArticleComments } from '@/editable/components/EditableArticleComments'
 import { getTaskTheme, taskThemeStyle } from '@/editable/theme/task-themes'
+import { Ads, getSlotSizes } from '@/lib/ads'
 
 export const revalidate = 3
+
+const pickRandom = (sizes: string[]) => sizes[Math.floor(Math.random() * sizes.length)]
 
 export async function generateEditableDetailMetadata(task: TaskKey, params: Promise<{ slug?: string; username?: string }>) {
   const resolved = await params
@@ -243,7 +246,7 @@ function ListingDetail({ post, related }: { post: SitePost; related: SitePost[] 
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           {mapSrc ? <MapBox src={mapSrc} label={address || post.title} /> : null}
           <ContactAction website={website} phone={phone} email={email} />
-          <RelatedPanel task="listing" post={post} related={related} />
+          <RelatedPanel task="listing" related={related} />
         </aside>
       </div>
     </section>
@@ -322,22 +325,70 @@ function ImageDetail({ post, related }: { post: SitePost; related: SitePost[] })
 // ----- Bookmark: a single curated resource -----
 function BookmarkDetail({ post, related }: { post: SitePost; related: SitePost[] }) {
   const website = getField(post, ['website', 'url', 'link'])
+  const category = categoryOf(post, 'Collection')
+  const domain = website ? website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] : 'Saved source'
   return (
     <>
-      <article className="mx-auto max-w-3xl px-6 py-14 sm:py-20">
-        <BackLink task="sbm" />
-        <div className="mt-10 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--tk-accent-soft)] text-[var(--tk-accent)]"><Bookmark className="h-7 w-7" /></div>
-        <div className="mt-6"><Kicker task="sbm">Saved resource</Kicker></div>
-        <h1 className="editable-display mt-4 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-5xl">{post.title}</h1>
-        {leadText(post) ? <p className="mt-6 text-lg leading-8 text-[var(--tk-muted)]">{leadText(post)}</p> : null}
-        {website ? (
-          <Link href={website} target="_blank" rel="noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--tk-accent)] px-5 py-3 text-sm font-semibold text-[var(--tk-on-accent)] transition hover:opacity-90">
-            Open resource <ExternalLink className="h-4 w-4" />
-          </Link>
-        ) : null}
-        <BodyContent post={post} />
-      </article>
-      <RelatedStrip task="sbm" related={related} />
+      <section className="border-b border-[var(--tk-line)] bg-[var(--slot4-dark-bg)]">
+        <div className="mx-auto max-w-[var(--editable-container)] px-6 py-16 sm:py-24 lg:px-8">
+          <BackLink task="sbm" />
+          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--tk-line)] bg-[var(--tk-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tk-accent)]">
+                <Globe2 className="h-4 w-4" /> {domain}
+              </div>
+              <h1 className="editable-display mt-6 max-w-4xl text-balance text-5xl font-normal leading-[1] text-[var(--slot4-page-text)] sm:text-6xl lg:text-7xl">{post.title}</h1>
+              {leadText(post) ? <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--tk-muted)]">{leadText(post)}</p> : null}
+              {website ? (
+                <Link href={website} target="_blank" rel="noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-md bg-[var(--tk-accent)] px-5 py-3 text-sm font-semibold text-[var(--tk-on-accent)] transition hover:bg-[var(--slot4-surface-bg)]">
+                  Visit resource <ExternalLink className="h-4 w-4" />
+                </Link>
+              ) : null}
+            </div>
+            <div className="grid gap-3 rounded-xl border border-[var(--tk-line)] bg-[var(--tk-surface)] p-5">
+              {[
+                ['Collection', category],
+                ['Domain', domain],
+                ['Verified', SITE_CONFIG.name],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-4 border-b border-[var(--tk-line)] py-3 last:border-0">
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tk-muted)]">{label}</span>
+                  <span className="text-right text-sm font-semibold text-[var(--slot4-page-text)]">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="mx-auto grid max-w-[var(--editable-container)] gap-10 px-6 py-14 sm:py-20 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+        <article className="min-w-0">
+          <h2 className="editable-display text-4xl font-normal leading-[1.05] text-[var(--slot4-page-text)]">Resource notes</h2>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {[category, domain, 'Curated'].filter(Boolean).map((chip) => (
+              <span key={chip} className="rounded-full border border-[var(--tk-line)] bg-[var(--tk-surface)] px-3 py-1 text-xs font-semibold text-[var(--tk-muted)]">{chip}</span>
+            ))}
+          </div>
+          <BodyContent post={post} />
+        </article>
+        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-xl border border-[var(--tk-line)] bg-[var(--tk-surface)] p-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--tk-accent-soft)] text-[var(--tk-accent)]"><Bookmark className="h-6 w-6" /></div>
+            <h2 className="editable-display mt-5 text-2xl font-normal text-[var(--slot4-page-text)]">Saved resource</h2>
+            <p className="mt-3 text-sm leading-7 text-[var(--tk-muted)]">Open the source in a new tab, then return to continue browsing the collection.</p>
+            {website ? (
+              <Link href={website} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--tk-accent)] px-5 py-3 text-sm font-semibold text-[var(--tk-on-accent)] transition hover:bg-[var(--slot4-surface-bg)]">
+                Visit resource <ExternalLink className="h-4 w-4" />
+              </Link>
+            ) : null}
+          </div>
+          <div className="rounded-xl border border-[var(--tk-line)] bg-[var(--tk-surface)] p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tk-accent)]">Trust panel</p>
+            <p className="mt-3 text-sm leading-7 text-[var(--tk-muted)]">Resource metadata is displayed before outbound navigation so visitors can understand the collection and source domain first.</p>
+          </div>
+          <Ads slot="sidebar" size={pickRandom(getSlotSizes('sidebar'))} showLabel />
+        </aside>
+      </section>
+      <RelatedStrip task="sbm" related={related} title="More from this collection" />
     </>
   )
 }
@@ -376,7 +427,7 @@ function PdfDetail({ post, related }: { post: SitePost; related: SitePost[] }) {
               <Link href={fileUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--tk-accent)] px-5 py-3 text-sm font-semibold text-[var(--tk-on-accent)] transition hover:opacity-90">Download <Download className="h-4 w-4" /></Link>
             </div>
           ) : null}
-          <RelatedPanel task="pdf" post={post} related={related} />
+          <RelatedPanel task="pdf" related={related} />
         </aside>
       </div>
     </section>
@@ -384,36 +435,51 @@ function PdfDetail({ post, related }: { post: SitePost; related: SitePost[] }) {
 }
 
 // ----- Profile: identity-first with a sticky portrait -----
-function ProfileDetail({ post, related }: { post: SitePost; related: SitePost[] }) {
+function ProfileDetail({ post }: { post: SitePost; related: SitePost[] }) {
   const images = getImages(post)
   const role = getField(post, ['role', 'designation', 'company', 'location'])
   const website = getField(post, ['website', 'url'])
   const email = getField(post, ['email'])
+  const phone = getField(post, ['phone', 'telephone', 'mobile'])
+  const initials = post.title.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
   return (
-    <>
-      <section className="mx-auto max-w-[var(--editable-container)] px-6 py-14 sm:py-20 lg:px-8">
-        <BackLink task="profile" />
-        <div className="mt-8 grid gap-10 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-[var(--tk-radius)] border border-[var(--tk-line)] bg-[var(--tk-surface)] p-8 text-center shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
-              <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border border-[var(--tk-line)] bg-[var(--tk-raised)]">
-                {images[0] ? <img src={images[0]} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-14 w-14 text-[var(--tk-muted)]" />}
+    <section className="mx-auto max-w-[var(--editable-container)] px-6 py-14 sm:py-20 lg:px-8">
+      <div className="overflow-hidden rounded-xl border border-[var(--tk-line)] bg-[var(--tk-surface)]">
+        <div className="h-44 bg-[radial-gradient(circle_at_30%_20%,var(--tk-glow),transparent_35%),linear-gradient(135deg,#AFC8AD,#EEE7DA)]" />
+        <div className="grid gap-10 px-6 pb-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:px-10">
+          <article className="min-w-0">
+            <div className="-mt-16 flex flex-col gap-5 sm:flex-row sm:items-end">
+              <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--tk-surface)] bg-[var(--tk-raised)] text-4xl font-semibold text-[var(--tk-accent)]">
+                {images[0] ? <img src={images[0]} alt="" className="h-full w-full object-cover" /> : initials || <UserRound className="h-12 w-12" />}
               </div>
-              <h1 className="editable-display mt-6 text-2xl font-semibold tracking-[-0.02em]">{post.title}</h1>
-              {role ? <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em] text-[var(--tk-accent)]">{role}</p> : null}
-              <DetailMeta post={post} center />
-              <ContactAction website={website} email={email} bare />
+              <div className="pb-2">
+                <h1 className="editable-display text-5xl font-normal leading-[1] text-[var(--slot4-page-text)]">{post.title}</h1>
+                {role ? <p className="mt-3 text-sm font-semibold uppercase tracking-[0.16em] text-[var(--tk-accent)]">{role}</p> : null}
+              </div>
+            </div>
+            {leadText(post) ? <p className="mt-8 max-w-3xl text-lg leading-8 text-[var(--tk-muted)]">{leadText(post)}</p> : null}
+            <BodyContent post={post} />
+            <section className="mt-10">
+              <h2 className="editable-display text-3xl font-normal text-[var(--slot4-page-text)]">Their content</h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--tk-muted)]">Direct identity context and any attached notes are shown here without promoting this page in public discovery.</p>
+              <ImageStrip images={images.slice(1)} label="Attached media" />
+            </section>
+          </article>
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-xl border border-[var(--tk-line)] bg-[var(--slot4-dark-bg)] p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--tk-accent)]">Identity info</p>
+              <div className="mt-5 grid gap-3 text-sm text-[var(--tk-muted)]">
+                {role ? <BadgeLine label="Role" value={role} /> : null}
+                {website ? <BadgeLine label="Website" value={website} /> : null}
+                {email ? <BadgeLine label="Email" value={email} /> : null}
+                {phone ? <BadgeLine label="Phone" value={phone} /> : null}
+              </div>
+              <ContactAction website={website} phone={phone} email={email} bare />
             </div>
           </aside>
-          <article className="min-w-0">
-            <Kicker task="profile">Profile</Kicker>
-            <BodyContent post={post} />
-            <ImageStrip images={images.slice(1)} label="Gallery" />
-          </article>
         </div>
-      </section>
-      <RelatedStrip task="profile" related={related} />
-    </>
+      </div>
+    </section>
   )
 }
 
@@ -494,7 +560,7 @@ function BadgeLine({ label, value }: { label: string; value: string }) {
   )
 }
 
-function RelatedPanel({ task, post, related }: { task: TaskKey; post: SitePost; related: SitePost[] }) {
+function RelatedPanel({ task, related }: { task: TaskKey; related: SitePost[] }) {
   const taskConfig = getTaskConfig(task)
   return (
     <div className="space-y-6">
@@ -520,14 +586,14 @@ function RelatedPanel({ task, post, related }: { task: TaskKey; post: SitePost; 
   )
 }
 
-function RelatedStrip({ task, related }: { task: TaskKey; related: SitePost[] }) {
+function RelatedStrip({ task, related, title }: { task: TaskKey; related: SitePost[]; title?: string }) {
   if (!related.length) return null
   const taskConfig = getTaskConfig(task)
   return (
     <section className="border-t border-[var(--tk-line)]">
       <div className="mx-auto max-w-[var(--editable-container)] px-6 py-14 sm:py-16 lg:px-8">
         <div className="flex items-center justify-between">
-          <h2 className="editable-display text-2xl font-semibold tracking-[-0.02em]">More {(taskConfig?.label || 'posts').toLowerCase()}</h2>
+          <h2 className="editable-display text-2xl font-semibold tracking-[-0.02em]">{title || `More ${(taskConfig?.label || 'posts').toLowerCase()}`}</h2>
           <Link href={taskConfig?.route || '/'} className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--tk-accent)]">View all <ArrowUpRight className="h-4 w-4" /></Link>
         </div>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
