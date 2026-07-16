@@ -13,8 +13,8 @@ export const slot4TaskSupport = {
 export const slot4TaskNotes = {
   article: "Article pages and article detail backlinks",
   classified: "Classified ads pages and detail backlinks",
-  sbm: "Social bookmarking pages and detail backlinks",
-  profile: "Profile/user pages",
+  sbm: "Bookmark resource pages and detail backlinks",
+  profile: "Direct identity pages",
   pdf: "PDF/document pages and detail backlinks",
   listing: "Business listing pages and detail backlinks",
   image: "Image/gallery pages and detail backlinks",
