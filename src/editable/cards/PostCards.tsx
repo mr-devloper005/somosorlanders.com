@@ -65,8 +65,8 @@ export function EditorialFeatureCard({ post, href, label = 'Featured read' }: { 
         <div className="relative z-10 flex h-full min-h-[460px] flex-col justify-end lg:min-h-[560px]">
           <span className={`${dc.type.eyebrow} ${pal.accentSoftText}`}>{label}</span>
           <h3 className="mt-5 max-w-3xl text-4xl font-black leading-[0.95] tracking-[-0.07em] sm:text-5xl lg:text-6xl">{post.title}</h3>
-          <p className="mt-5 max-w-2xl text-sm leading-8 text-white/75 sm:text-base">{getEditableExcerpt(post, 190)}</p>
-          <span className={`mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold ${pal.panelText}`}>
+          <p className="mt-5 max-w-2xl text-sm leading-8 text-[var(--slot4-muted-text)] sm:text-base">{getEditableExcerpt(post, 190)}</p>
+          <span className={`mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-[var(--slot4-surface-bg)] px-5 py-3 text-sm font-bold ${pal.panelText}`}>
             Read story <ArrowRight className="h-4 w-4" />
           </span>
         </div>
@@ -80,7 +80,7 @@ export function RailPostCard({ post, href, index }: { post: SitePost; href: stri
     <Link href={href} className={`group ${dc.layout.minRailCard} block overflow-hidden ${dc.surface.card} ${dc.motion.lift}`}>
       <div className={`${dc.media.frame} ${dc.media.ratio}`}>
         <img src={getEditablePostImage(post)} alt={post.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-        <span className={`absolute left-4 top-4 rounded-full ${pal.darkBg} px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white`}>No. {String(index + 1).padStart(2, '0')}</span>
+        <span className={`absolute left-4 top-4 rounded-full ${pal.darkBg} px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--slot4-page-text)]`}>No. {String(index + 1).padStart(2, '0')}</span>
       </div>
       <div className="p-5">
         <p className={`${dc.type.eyebrow} ${pal.accentText}`}>{getEditableCategory(post)}</p>
@@ -95,7 +95,7 @@ export function CompactIndexCard({ post, href, index }: { post: SitePost; href: 
   return (
     <Link href={href} className={`group block min-w-0 ${dc.surface.soft} p-5 ${dc.motion.lift}`}>
       <div className="flex items-start gap-4">
-        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${pal.darkBg} text-xs font-black text-white`}>{index + 1}</span>
+        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${pal.darkBg} text-xs font-black text-[var(--slot4-page-text)]`}>{index + 1}</span>
         <div className="min-w-0">
           <p className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] ${pal.accentText}`}><Clock3 className="h-3.5 w-3.5" /> {getEditableCategory(post)}</p>
           <h3 className={`mt-2 line-clamp-2 text-xl font-black leading-tight tracking-[-0.04em] ${pal.panelText}`}>{post.title}</h3>
